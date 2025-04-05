@@ -1,19 +1,18 @@
 export interface IParameter {
   value: number;
   name: string;
+  symbol?: string;
 }
 
 export interface IStatisticColumn {
-  GDP?: IParameter;
-  inflation?: IParameter;
+  gdpGrowth?: IParameter;
+  gdp?: IParameter;
   unemployment?: IParameter;
-  deficitSurplus?: IParameter;
-  debtBurden?: IParameter;
-  happiness?: IParameter;
-  ecology?: IParameter;
-  poverty?: IParameter;
-  export?: IParameter;
-  priceIndex?: IParameter;
+  inflation?: IParameter;
+  interestRate?: IParameter;
+  debtToGdp?: IParameter;
+  incomeTaxRate?: IParameter;
+  reserveRatio?: IParameter;
 }
 export interface RangeRow {
   firstColumn: Record<string, IParameter>;

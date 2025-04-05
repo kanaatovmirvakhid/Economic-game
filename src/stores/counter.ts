@@ -1,28 +1,26 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Ref } from "vue";
-import type { IRow, IParameter, RangeRow } from '../types/gameTypes'
+import type { IRow, RangeRow } from '../types/gameTypes'
 
 export const useGameStore = defineStore("game", () => {
   // Статистика по умолчанию
   const statistics = ref<IRow[]>([
     {
       firstColumn: {
-        GDP: { value: 100_000, name: "ВВП (млрд $)" },
-        inflation: { value: 2.5, name: "Инфляция (%)" },
-        unemployment: { value: 5.5, name: "Безработица (%)" },
-        deficitSurplus: {
-          value: -3,
-          name: "Бюджетный дефицит/профицит (% ВВП)",
-        },
-        debtBurden: { value: 60, name: "Долговая нагрузка (% ВВП)" },
+        gdpGrowth: { value: -5.3, name: "Темпы роста ВВП (%)",symbol: '%'},
+        gdp: { value: 270.96, name: "ВВП (млрд $)" ,symbol: 'млрд $'},
+        unemployment: { value:  13.26, name: "Уровень безработицы (%)",symbol: '%' },
+        inflation: { value: 27.69, name: "Уровень инфляции (%)" ,symbol: '%'},
       },
       secondColumn: {
-        happiness: { value: 70, name: "Индекс счастья" },
-        ecology: { value: 65, name: "Экологическое состояние" },
-        poverty: { value: 12, name: "Уровень бедности (%)" },
-        export: { value: 20_000, name: "Чистый экспорт (млрд $)" },
-        priceIndex: { value: 102, name: "Индекс потребительских цен" },
+        interestRate: {
+          value: 30,
+          name: "Процентная ставка (%)", symbol: '%'
+        },
+        debtToGdp: { value: 70, name: "Государственный долг к ВВП (%)",symbol: '%' },
+        incomeTaxRate: { value: 12, name: "Ставка подоходного налога (%)",symbol: '%' },
+        reserveRatio: { value: 11, name: "Норма обязательных резервов (%)",symbol: '%' }
       },
     },
   ]);
@@ -31,332 +29,236 @@ export const useGameStore = defineStore("game", () => {
   const ranges: Ref<RangeRow[]> = ref([
     {
       firstColumn: {
-        taxRate: {
-          value: 20, // Налоговая ставка
-          name: "Налоговая ставка",
+        interestRate: {
+          value: 50,
+          name: "Ключевая ставка",
         },
-        governmentSpending: {
-          value: 50, // Государственные расходы
-          name: "Государственные расходы",
+        moneySupply: {
+          value: 50,
+          name: "Денежная масса",
         },
-        loanRate: {
-          value: 5, // Ставка по кредитам
-          name: "Ставка по кредитам",
-        },
-        minimumWage: {
-          value: 30, // Минимальная зарплата
-          name: "Минимальная зарплата",
-        },
-        tradeBalance: {
-          value: 10, // Экспорт и импорт
-          name: "Экспорт и импорт",
+        reserveRequirements: {
+          value: 50,
+          name: "Резервные требования",
         },
       },
       secondColumn: {
-        subsidyPrograms: {
-          value: 40, // Программы субсидий
-          name: "Программы субсидий",
+        productionInvestment: {
+          value: 50,
+          name: "Инвестиции в производство",
         },
-        energyPolicy: {
-          value: 50, // Энергетическая политика
-          name: "Энергетическая политика",
+        wageSpending: {
+          value: 50,
+          name: "Затраты на зарплаты",
         },
-        agriculture: {
-          value: 30, // Сельское хозяйство
-          name: "Сельское хозяйство",
-        },
-        technologyInvestment: {
-          value: 20, // Инвестиции в технологии
-          name: "Инвестиции в технологии",
-        },
-        transportInfrastructure: {
-          value: 60, // Транспортная инфраструктура
-          name: "Транспортная инфраструктура",
+        productPrices: {
+          value: 50,
+          name: "Цены на товары",
         },
       },
       thirdColumn: {
-        healthcare: {
-          value: 40, // Здравоохранение
-          name: "Здравоохранение",
+        publicDissatisfaction: {
+          value: 50,
+          name: "Недовольство граждан",
         },
-        education: {
-          value: 50, // Образование
-          name: "Образование",
+        wageDemands: {
+          value: 50,
+          name: "Требования к зарплатам",
         },
-        militarySpending: {
-          value: 20, // Военные расходы
-          name: "Военные расходы",
-        },
-        pensionRate: {
-          value: 5, // Ставка по пенсионным накоплениям
-          name: "Ставка по пенсионным накоплениям",
-        },
-        consumerLoans: {
-          value: 15, // Потребительские кредиты
-          name: "Потребительские кредиты",
+        priceDemands: {
+          value: 50,
+          name: "Требования к ценам",
         },
       },
       fourthColumn: {
-        propertyTax: {
-          value: 10, // Налог на имущество
-          name: "Налог на имущество",
+        taxRate: {
+          value: 50,
+          name: "Налоги",
         },
-        pensionReform: {
-          value: 20, // Пенсионная реформа
-          name: "Пенсионная реформа",
+        govSpending: {
+          value: 50,
+          name: "Государственные расходы",
         },
-        currencyRate: {
-          value: 70, // Валютный курс
-          name: "Валютный курс",
-        },
-        cultureAndArts: {
-          value: 30, // Культура и искусство
-          name: "Культура и искусство",
-        },
-        antiCorruption: {
-          value: 50, // Борьба с коррупцией
-          name: "Борьба с коррупцией",
+        laborMarketRegulation: {
+          value: 50,
+          name: "Регулирование рынка труда",
         },
       },
     },
-  ]);
-
-  // function startGame() {
-  //   // Функция для добавления случайной погрешности в диапазоне 3-5%
-  //   const applyRandomError = (value: number) => {
-  //     const errorPercent = Math.random() * (5 - 3) + 3; // случайное число от 3 до 5
-  //     const error = value * (errorPercent / 100);
-  //     return Math.random() > 0.5 ? value + error : value - error; // случайно увеличиваем или уменьшаем
-  //   };
-
-  //   if (!ranges.value || !statistics.value) {
-  //     console.error("Данные для ranges или statistics отсутствуют!");
-  //     return;
-  //   }
-
-  //   // Копируем текущую статистику, чтобы создать новую
-  //   const newStatistics: IRow = JSON.parse(JSON.stringify(statistics.value[0]));
-
-  //   // Перебираем строки в диапазонах
-  //   Object.values(ranges.value[0]).forEach((column) => {
-  //     if (!column) return; // Если колонка не существует, пропускаем
-
-  //     Object.entries(column).forEach(([key, range]) => {
-  //       const rangeValue = (range as IParameter)?.value;
-  //       if (rangeValue === undefined) return; // Пропускаем, если значение не определено
-
-  //       const impactPercentage = rangeValue / 100; // Переводим в доли
-
-  //       // Динамически обновляем статистику
-  //       Object.values(newStatistics).forEach((statColumn) => {
-  //         Object.entries(statColumn).forEach(([statKey, statParam]) => {
-  //           if (statParam && statParam.value !== undefined) {
-  //             const influenceFactor = calculateInfluenceFactor(key, statKey);
-
-  //             // Обновляем значение статистики с учетом погрешности
-  //             statParam.value = applyRandomError(
-  //               statParam.value + impactPercentage * influenceFactor
-  //             );
-  //           }
-  //         });
-  //       });
-  //     });
-  //   });
-  //   statistics.value.push(newStatistics);
-  // }
-
-
-
+  ])
 
   // Функция для расчета влияния параметра на статистику
 
-  function startGame() {
-    // Функция для добавления случайной погрешности в диапазоне 3-5%
-    const applyRandomError = (value: number) => {
-      const errorPercent = Math.random() * (5 - 3) + 3; // случайное число от 3 до 5
-      const error = value * (errorPercent / 100);
-      return Math.random() > 0.5 ? value + error : value - error; // случайно увеличиваем или уменьшаем
+  function calculateInfluenceFactor(paramKey: string, statKey: string): number {
+    // Матрица влияния параметров на статистику
+    const influenceMatrix: Record<string, Record<string, number>> = {
+      // Первая колонка (монетарная политика)
+      interestRate: {
+        gdpGrowth: -0.08,
+        inflation: -0.25,
+        unemployment: 0.07,
+        debtToGdp: -0.1,
+        interestRate: 0.3
+      },
+      moneySupply: {
+        gdpGrowth: 0.12,
+        inflation: 0.3,
+        unemployment: -0.08,
+        gdp: 0.2
+      },
+      reserveRequirements: {
+        gdpGrowth: -0.05,
+        inflation: -0.15,
+        unemployment: 0.05,
+        reserveRatio: 0.4
+      },
+
+      // Вторая колонка (производство)
+      productionInvestment: {
+        gdpGrowth: 0.25,
+        unemployment: -0.2,
+        gdp: 0.35,
+        inflation: 0.1
+      },
+      wageSpending: {
+        gdpGrowth: 0.1,
+        unemployment: -0.15,
+        inflation: 0.2
+      },
+      productPrices: {
+        gdpGrowth: -0.05,
+        inflation: 0.4,
+        unemployment: 0.1
+      },
+
+      // Третья колонка (социальные факторы)
+      publicDissatisfaction: {
+        gdpGrowth: -0.15,
+        unemployment: 0.2
+      },
+      wageDemands: {
+        gdpGrowth: -0.1,
+        inflation: 0.25,
+        unemployment: -0.1
+      },
+      priceDemands: {
+        inflation: -0.2,
+        gdpGrowth: 0.05
+      },
+
+      // Четвертая колонка (фискальная политика)
+      taxRate: {
+        gdpGrowth: -0.15,
+        unemployment: -0.1,
+        debtToGdp: -0.2,
+        incomeTaxRate: 0.5
+      },
+      govSpending: {
+        gdpGrowth: 0.2,
+        unemployment: -0.15,
+        debtToGdp: 0.3,
+        inflation: 0.15
+      },
+      laborMarketRegulation: {
+        gdpGrowth: -0.1,
+        unemployment: -0.25,
+        inflation: 0.1
+      }
     };
 
-    if (!ranges.value || !statistics.value) {
-      console.error("Данные для ranges или statistics отсутствуют!");
-      return;
-    }
+    return influenceMatrix[paramKey]?.[statKey] || 0;
+  }
 
-    // Копируем текущую статистику, чтобы создать новую
-    const newStatistics: IRow = JSON.parse(JSON.stringify(statistics.value[0]));
+  function startGame() {
+    // Копируем последнюю статистику
+    const lastStat = statistics.value[statistics.value.length - 1];
+    const newStatistics: IRow = JSON.parse(JSON.stringify(lastStat));
 
-    // Перебираем строки в диапазонах
-    Object.values(ranges.value[0]).forEach((column) => {
-      if (!column) return; // Если колонка не существует, пропускаем
+    // Применяем влияние всех параметров
+    applyAllParametersInfluence(newStatistics);
 
-      Object.entries(column).forEach(([key, range]) => {
-        const rangeValue = (range as IParameter)?.value;
-        if (rangeValue === undefined) return; // Пропускаем, если значение не определено
+    // Добавляем случайные события
+    applyRandomEvents(newStatistics);
 
-        const impactPercentage = rangeValue / 100; // Переводим в доли
+    // Обеспечиваем минимальные значения и округляем
+    finalizeStatistics(newStatistics);
 
-        // Суммируем влияние на статистику
-        const totalImpact: Record<string, number> = {};
-
-        // Перебираем всю статистику и для каждого столбца считаем влияние
-        Object.values(newStatistics).forEach((statColumn) => {
-          Object.entries(statColumn).forEach(([statKey, statParam]) => {
-            if (statParam && statParam.value !== undefined) {
-              // Получаем коэффициент влияния для текущего параметра
-              const influenceFactor = calculateInfluenceFactor(key, statKey);
-
-              // Добавляем процентное влияние на статистику
-              if (!totalImpact[statKey]) {
-                totalImpact[statKey] = 0;
-              }
-              totalImpact[statKey] += influenceFactor * impactPercentage;
-            }
-          });
-        });
-
-        // Теперь применяем итоговый процент ко всем статистическим значениям
-        Object.values(newStatistics).forEach((statColumn) => {
-          Object.entries(statColumn).forEach(([statKey, statParam]) => {
-            if (statParam && statParam.value !== undefined) {
-              const totalInfluence = totalImpact[statKey] || 0;
-
-              // Применяем итоговый процент с погрешностью к текущему значению
-              statParam.value = applyRandomError(statParam.value * (1 + totalInfluence));
-            }
-          });
-        });
-      });
-    });
-
-    // Добавляем обновленную статистику в массив statistics
+    // Добавляем новую статистику в массив
     statistics.value.push(newStatistics);
   }
 
-  function calculateInfluenceFactor(paramKey: string, statKey: string): number {
-    const influenceMapping: Record<string, Record<string, number>> = {
-      taxRate: {
-        GDP: -2,      // Влияние на ВВП
-        inflation: -1, // Влияние на инфляцию
-        unemployment: 1, // Влияние на безработицу
-        deficitSurplus: 3, // Влияние на бюджетный дефицит
-        happiness: -2, // Влияние на уровень счастья
-      },
-      governmentSpending: {
-        GDP: 4,       // Влияние на ВВП
-        inflation: 3,  // Влияние на инфляцию
-        debtBurden: 2, // Влияние на долговую нагрузку
-        happiness: 5,  // Влияние на уровень счастья
-      },
-      loanRate: {
-        GDP: -3,      // Влияние на ВВП
-        unemployment: 2, // Влияние на безработицу
-        priceIndex: -1, // Влияние на индекс потребительских цен
-        happiness: -3,  // Влияние на уровень счастья
-      },
-      minimumWage: {
-        GDP: -1,      // Влияние на ВВП
-        unemployment: 2, // Влияние на безработицу
-        poverty: -4,   // Влияние на уровень бедности
-        happiness: 3,  // Влияние на уровень счастья
-      },
-      tradeBalance: {
-        GDP: 5,       // Влияние на ВВП
-        debtBurden: -3, // Влияние на долговую нагрузку
-        export: 7,     // Влияние на экспорт
-        priceIndex: -2, // Влияние на индекс потребительских цен
-      },
-      subsidyPrograms: {
-        GDP: 2,       // Влияние на ВВП
-        inflation: 1,  // Влияние на инфляцию
-        happiness: 4,  // Влияние на уровень счастья
-        poverty: -3,   // Влияние на уровень бедности
-      },
-      energyPolicy: {
-        ecology: 5,    // Влияние на экологию
-        GDP: -2,       // Влияние на ВВП
-        happiness: 3,  // Влияние на уровень счастья
-      },
-      agriculture: {
-        GDP: 3,        // Влияние на ВВП
-        poverty: -2,   // Влияние на уровень бедности
-        ecology: -1,   // Влияние на экологию
-      },
-      technologyInvestment: {
-        GDP: 5,        // Влияние на ВВП
-        happiness: 2,  // Влияние на уровень счастья
-        unemployment: -3, // Влияние на безработицу
-      },
-      transportInfrastructure: {
-        GDP: 4,        // Влияние на ВВП
-        ecology: -2,   // Влияние на экологию
-        happiness: 3,  // Влияние на уровень счастья
-      },
-      healthcare: {
-        happiness: 6,  // Влияние на уровень счастья
-        poverty: -4,   // Влияние на уровень бедности
-        unemployment: -2, // Влияние на безработицу
-        GDP: 3,        // Влияние на ВВП
-      },
-      education: {
-        GDP: 5,        // Влияние на ВВП
-        poverty: -3,   // Влияние на уровень бедности
-        unemployment: -2, // Влияние на безработицу
-        happiness: 4,  // Влияние на уровень счастья
-      },
-      militarySpending: {
-        GDP: 2,        // Влияние на ВВП
-        inflation: 1,  // Влияние на инфляцию
-        debtBurden: 3, // Влияние на долговую нагрузку
-        happiness: -2, // Влияние на уровень счастья
-      },
-      pensionRate: {
-        happiness: 4,  // Влияние на уровень счастья
-        debtBurden: -2, // Влияние на долговую нагрузку
-        priceIndex: -1, // Влияние на индекс потребительских цен
-        poverty: -3,   // Влияние на уровень бедности
-      },
-      consumerLoans: {
-        GDP: 4,        // Влияние на ВВП
-        inflation: 2,  // Влияние на инфляцию
-        unemployment: -3, // Влияние на безработицу
-        happiness: 3,  // Влияние на уровень счастья
-      },
-      propertyTax: {
-        GDP: -2,       // Влияние на ВВП
-        happiness: -3, // Влияние на уровень счастья
-        deficitSurplus: 5, // Влияние на бюджетный дефицит
-        poverty: -1,   // Влияние на уровень бедности
-      },
-      pensionReform: {
-        happiness: -3, // Влияние на уровень счастья
-        deficitSurplus: 4, // Влияние на бюджетный дефицит
-        debtBurden: -2, // Влияние на долговую нагрузку
-        poverty: -2,   // Влияние на уровень бедности
-      },
-      currencyRate: {
-        GDP: 5,        // Влияние на ВВП
-        export: 6,     // Влияние на экспорт
-        inflation: -2, // Влияние на инфляцию
-        poverty: -3,   // Влияние на уровень бедности
-      },
-      cultureAndArts: {
-        happiness: 6,  // Влияние на уровень счастья
-        GDP: 2,        // Влияние на ВВП
-        unemployment: -1, // Влияние на безработицу
-        ecology: 2,    // Влияние на экологию
-      },
-      antiCorruption: {
-        happiness: 5,  // Влияние на уровень счастья
-        GDP: 4,        // Влияние на ВВП
-        poverty: -5,   // Влияние на уровень бедности
-        unemployment: -2, // Влияние на безработицу
-      },
+  function applyAllParametersInfluence(stats: IRow) {
+    const currentRanges = ranges.value[0];
+
+    // Функция для обработки каждой колонки параметров
+    const applyColumnInfluence = (column: Record<string, { value: number }>) => {
+      Object.entries(column).forEach(([paramKey, { value: paramValue }]) => {
+        // Нормализуем значение параметра (0-100) к диапазону -1..1
+        const normalizedValue = (paramValue - 50) / 50;
+
+        // Применяем влияние к первой колонке статистики
+        Object.keys(stats.firstColumn).forEach(statKey => {
+          const influence = calculateInfluenceFactor(paramKey, statKey);
+          stats.firstColumn[statKey].value += influence * normalizedValue;
+        });
+
+        // Применяем влияние ко второй колонке статистики
+        Object.keys(stats.secondColumn).forEach(statKey => {
+          const influence = calculateInfluenceFactor(paramKey, statKey);
+          stats.secondColumn[statKey].value += influence * normalizedValue;
+        });
+      });
     };
 
-    return influenceMapping[paramKey]?.[statKey] || 0; // Если нет явного влияния, возвращаем 0
+    // Обрабатываем все колонки параметров
+    applyColumnInfluence(currentRanges.firstColumn);
+    applyColumnInfluence(currentRanges.secondColumn);
+    applyColumnInfluence(currentRanges.thirdColumn);
+    applyColumnInfluence(currentRanges.fourthColumn);
   }
 
+  function applyRandomEvents(stats: IRow) {
+    // 15% шанс случайного события
+    if (Math.random() < 0.15) {
+      const events = [
+        { key: 'gdpGrowth', change: 2.5, message: "Экономический бум! ВВП растет" },
+        { key: 'gdpGrowth', change: -3.5, message: "Финансовый кризис! ВВП падает" },
+        { key: 'inflation', change: 7, message: "Гиперинфляция! Цены растут" },
+        { key: 'inflation', change: -4, message: "Дефляция! Цены падают" },
+        { key: 'unemployment', change: -5, message: "Трудовой бум! Безработица снижается" },
+        { key: 'unemployment', change: 6, message: "Массовые увольнения! Безработица растет" },
+        { key: 'debtToGdp', change: 10, message: "Госдолг резко увеличился" }
+      ];
+
+      const event = events[Math.floor(Math.random() * events.length)];
+
+      if (stats.firstColumn[event.key]) {
+        stats.firstColumn[event.key].value += event.change;
+      } else if (stats.secondColumn[event.key]) {
+        stats.secondColumn[event.key].value += event.change;
+      }
+
+      console.log("Событие:", event.message);
+    }
+  }
+
+  function finalizeStatistics(stats: IRow) {
+    // Обеспечиваем минимальные значения и округляем
+    const processStats = (column: Record<string, { value: number }>) => {
+      Object.values(column).forEach(item => {
+        // Округляем до 3 знаков после запятой
+        item.value = parseFloat(item.value.toFixed(3));
+
+        // Устанавливаем минимальные значения
+        if (item.value < 0) item.value = 0;
+        if (item.symbol === '%' && item.value > 100) item.value = 100;
+      });
+    };
+
+    processStats(stats.firstColumn);
+    processStats(stats.secondColumn);
+  }
+  
   return {
     statistics,
     ranges,

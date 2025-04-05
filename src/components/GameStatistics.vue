@@ -22,18 +22,18 @@ const lastYear = computed(() => {
         <div class="statistics__name">{{ item?.name }}</div>
         <div class="statistics__value"  v-if="
               lastYear > 0 &&
-              Number(item?.value.toFixed(0)) > statistics[lastYear - 1]?.firstColumn[index]?.value
+              Number(item?.value.toFixed(0)) > statistics[lastYear - 1]?.firstColumn[index]?.value!
             ">
-          <span class="increase">{{ item?.value.toFixed(3) }}</span> <img src="../assets/img/increase.png" alt="">
+          <span class="increase">{{ item?.value.toFixed(3) }} {{ item?.symbol}}</span> <img src="../assets/img/increase.png" alt="">
         </div>
         <div class="statistics__value" v-else-if="
               lastYear > 0 &&
-              Number(item?.value.toFixed(0)) < statistics[lastYear - 1]?.firstColumn[index]?.value
+              Number(item?.value.toFixed(0)) < statistics[lastYear - 1]?.firstColumn[index]?.value!
             ">
-          <span class="decrease">{{ item?.value.toFixed(3) }}</span> <img src="../assets/img/decrease.png" alt="">
+          <span class="decrease">{{ item?.value.toFixed(3) }} {{ item?.symbol}}</span> <img src="../assets/img/decrease.png" alt="">
         </div>
         <div class="statistics__value" v-else>
-          <span >{{ item?.value.toFixed(3) }}</span>
+          <span >{{ item?.value.toFixed(3) }} {{ item?.symbol}}</span>
         </div>
       </div>
     </div>
@@ -46,18 +46,18 @@ const lastYear = computed(() => {
         <div class="statistics__name">{{ item?.name }}</div>
         <div class="statistics__value"  v-if="
               lastYear > 0 &&
-              Number(item?.value.toFixed(0)) > statistics[lastYear - 1]?.secondColumn[index]?.value
+              Number(item?.value.toFixed(0)) > statistics[lastYear - 1]?.secondColumn[index]?.value!
             ">
-          <span class="increase">{{ item?.value.toFixed(3) }}</span> <img src="../assets/img/increase.png" alt="">
+          <span class="increase">{{ item?.value.toFixed(3) }} {{ item?.symbol}}</span><img src="../assets/img/increase.png" alt="">
         </div>
         <div class="statistics__value" v-else-if="
               lastYear > 0 &&
-              Number(item?.value.toFixed(0)) < statistics[lastYear - 1]?.secondColumn[index]?.value
+              Number(item?.value.toFixed(0)) < statistics[lastYear - 1]?.secondColumn[index]?.value!
             ">
-          <span class="decrease">{{ item?.value.toFixed(3) }}</span> <img src="../assets/img/decrease.png" alt="">
+          <span class="decrease">{{ item?.value.toFixed(3) }} {{ item?.symbol}}</span> <img src="../assets/img/decrease.png" alt="">
         </div>
         <div class="statistics__value" v-else>
-          <span >{{ item?.value.toFixed(3) }}</span>
+          <span >{{ item?.value.toFixed(3) }} {{ item?.symbol}}</span>
         </div>
       </div>
     </div>
