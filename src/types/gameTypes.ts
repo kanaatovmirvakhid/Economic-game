@@ -1,3 +1,54 @@
+export interface IStatItem {
+  value: number;
+  name: string;
+  symbol: string;
+  canBeNegative?: boolean;
+}
+export interface IRow {
+  date: string;
+  firstColumn: {
+    gdpGrowth: IStatItem;
+    gdp: IStatItem;
+    unemployment: IStatItem;
+    inflation: IStatItem;
+    [key: string]: IStatItem;
+  };
+  secondColumn: {
+    budgetDeficit: IStatItem;
+    foreignReserves: IStatItem;
+    tradeBalance: IStatItem;
+    industrialOutput: IStatItem;
+    [key: string]: IStatItem;
+  };
+}
+
+export interface RangeRow {
+  team: string;
+  firstColumn?: {
+    [key: string]: {
+      value: number;
+      name: string;
+    };
+  };
+  secondColumn?: {
+    [key: string]: {
+      value: number;
+      name: string;
+    };
+  };
+  thirdColumn?: {
+    [key: string]: {
+      value: number;
+      name: string;
+    };
+  };
+  fourthColumn?: {
+    [key: string]: {
+      value: number;
+      name: string;
+    };
+  };
+}
 export interface IParameter {
   value: number;
   name: string;
@@ -14,13 +65,4 @@ export interface IStatisticColumn {
   incomeTaxRate?: IParameter;
   reserveRatio?: IParameter;
 }
-export interface RangeRow {
-  firstColumn: Record<string, IParameter>;
-  secondColumn: Record<string, IParameter>;
-  thirdColumn: Record<string, IParameter>;
-  fourthColumn: Record<string, IParameter>;
-}
-export interface IRow {
-  firstColumn: IStatisticColumn;
-  secondColumn: IStatisticColumn;
-}
+

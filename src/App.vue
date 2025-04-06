@@ -1,51 +1,532 @@
 <script setup lang="ts">
-import GameStatistics from './components/GameStatistics.vue';
-import GameRanges from './components/GameRanges.vue';
-
+import { ref, onMounted, watch, computed, nextTick } from 'vue';
 import { useGameStore } from './stores/counter';
+import Chart from 'chart.js/auto';
+import GameStatistics from './components/GameStatistics.vue'
+import GameRanges from './components/GameRanges.vue'
+import WelcomeModal from './components/WelcomeModal.vue';
+
 const gameStore = useGameStore();
+
+// Refs для графиков
+const gdpChart = ref<HTMLCanvasElement>();
+const inflationChart = ref<HTMLCanvasElement>();
+const unemploymentChart = ref<HTMLCanvasElement>();
+const industrialChart = ref<HTMLCanvasElement>();
+let chartInstances: Chart[] = [];
+
+// Полная статистика всех показателей
+const mainStats = computed(() => {
+  if (gameStore.statistics.length < 2) return [];
+
+  const first = gameStore.statistics[0];
+  const last = gameStore.statistics[gameStore.statistics.length - 1];
+
+  return [
+    { name: 'ВВП', value: last.firstColumn.gdp.value, unit: 'млрд $',
+      change: last.firstColumn.gdp.value - first.firstColumn.gdp.value,
+      isPositive: last.firstColumn.gdp.value > first.firstColumn.gdp.value },
+    { name: 'Рост ВВП', value: last.firstColumn.gdpGrowth.value, unit: '%',
+      change: last.firstColumn.gdpGrowth.value - first.firstColumn.gdpGrowth.value,
+      isPositive: last.firstColumn.gdpGrowth.value > first.firstColumn.gdpGrowth.value },
+    { name: 'Инфляция', value: last.firstColumn.inflation.value, unit: '%',
+      change: last.firstColumn.inflation.value - first.firstColumn.inflation.value,
+      isPositive: last.firstColumn.inflation.value < first.firstColumn.inflation.value }, // Инфляция - меньше лучше
+    { name: 'Безработица', value: last.firstColumn.unemployment.value, unit: '%',
+      change: last.firstColumn.unemployment.value - first.firstColumn.unemployment.value,
+      isPositive: last.firstColumn.unemployment.value < first.firstColumn.unemployment.value },
+    { name: 'Дефицит бюджета', value: last.secondColumn.budgetDeficit.value, unit: '%',
+      change: last.secondColumn.budgetDeficit.value - first.secondColumn.budgetDeficit.value,
+      isPositive: last.secondColumn.budgetDeficit.value < first.secondColumn.budgetDeficit.value },
+    { name: 'Золотовалютные резервы', value: last.secondColumn.foreignReserves.value, unit: 'млрд $',
+      change: last.secondColumn.foreignReserves.value - first.secondColumn.foreignReserves.value,
+      isPositive: last.secondColumn.foreignReserves.value > first.secondColumn.foreignReserves.value },
+    { name: 'Торговый баланс', value: last.secondColumn.tradeBalance.value, unit: 'млрд $',
+      change: last.secondColumn.tradeBalance.value - first.secondColumn.tradeBalance.value,
+      isPositive: last.secondColumn.tradeBalance.value > first.secondColumn.tradeBalance.value },
+    { name: 'Промпроизводство', value: last.secondColumn.industrialOutput.value, unit: '%',
+      change: last.secondColumn.industrialOutput.value - first.secondColumn.industrialOutput.value,
+      isPositive: last.secondColumn.industrialOutput.value > first.secondColumn.industrialOutput.value }
+  ];
+});
+
+// Рейтинг страны
+const countryRanking = computed(() => {
+  const gdp = gameStore.statistics[gameStore.statistics.length - 1].firstColumn.gdp.value;
+
+  // Примерные ранги на основе ВВП
+  if (gdp > 20000) return { rank: 1, neighbors: ['США', 'Китай'] };
+  if (gdp > 10000) return { rank: 5, neighbors: ['Германия', 'Индия'] };
+  if (gdp > 5000) return { rank: 10, neighbors: ['Канада', 'Южная Корея'] };
+  if (gdp > 1000) return { rank: 30, neighbors: ['Польша', 'Таиланд'] };
+  if (gdp > 500) return { rank: 54, neighbors: ['Греция', 'Чили'] };
+  return { rank: 70, neighbors: ['Украина', 'Перу'] };
+});
+
+// Инициализация графиков
+onMounted(() => {
+  watch(() => gameStore.showFinalModal, (val) => {
+    if (val) {
+      nextTick(() => {
+        initCharts();
+      });
+    } else {
+      destroyCharts();
+    }
+  });
+});
+
+function initCharts() {
+  destroyCharts();
+
+  if (!gdpChart.value || !inflationChart.value || !unemploymentChart.value || !industrialChart.value) return;
+
+  const labels = gameStore.statistics.map(s => s.date);
+  const colors = ['#4CAF50', '#F44336', '#FF9800', '#2196F3'];
+
+  const charts = [
+    { ref: gdpChart, data: gameStore.statistics.map(s => s.firstColumn.gdp.value), label: 'ВВП (млрд $)', color: colors[0] },
+    { ref: inflationChart, data: gameStore.statistics.map(s => s.firstColumn.inflation.value), label: 'Инфляция (%)', color: colors[1] },
+    { ref: unemploymentChart, data: gameStore.statistics.map(s => s.firstColumn.unemployment.value), label: 'Безработица (%)', color: colors[2] },
+    { ref: industrialChart, data: gameStore.statistics.map(s => s.secondColumn.industrialOutput.value), label: 'Промпроизводство (%)', color: colors[3] }
+  ];
+
+  charts.forEach((chart, i) => {
+    if (chart.ref.value) {
+      const instance = new Chart(chart.ref.value, getChartConfig(labels, chart.data, chart.label, chart.color));
+      chartInstances.push(instance);
+    }
+  });
+}
+
+function destroyCharts() {
+  chartInstances.forEach(instance => instance.destroy());
+  chartInstances = [];
+}
+
+function getChartConfig(labels: string[], data: number[], label: string, color: string) {
+  return {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data,
+        borderColor: color,
+        backgroundColor: `${color}20`,
+        tension: 0.3,
+        fill: true,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) => `${label}: ${context.raw}${label.includes('ВВП') ? ' млрд $' : '%'}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: label !== 'ВВП (млрд $)',
+          title: { display: true, text: label.includes('ВВП') ? 'млрд $' : '%' }
+        }
+      }
+    }
+  };
+}
+
+// Оценка экономического состояния
+const economicAssessment = computed(() => {
+  const last = gameStore.statistics[gameStore.statistics.length - 1];
+  const gdpGrowth = last.firstColumn.gdpGrowth.value;
+  const inflation = last.firstColumn.inflation.value;
+  const unemployment = last.firstColumn.unemployment.value;
+
+  if (gdpGrowth > 5 && inflation < 10 && unemployment < 5)
+    return "Экономика в отличном состоянии! Страна переживает экономический бум.";
+  if (gdpGrowth > 2 && inflation < 15 && unemployment < 8)
+    return "Экономика стабильна и показывает умеренный рост.";
+  if (gdpGrowth > 0 && inflation < 20 && unemployment < 12)
+    return "Экономика испытывает небольшие трудности, но в целом стабильна.";
+  if (gdpGrowth <= 0 || inflation >= 20 || unemployment >= 12)
+    return "Экономика в кризисном состоянии. Требуются срочные реформы.";
+  return "Экономика находится в переходном состоянии.";
+});
 </script>
 
 <template>
- <div class="game">
-    <header class="header">
-      <GameStatistics :statistics="gameStore.statistics"></GameStatistics>
-    </header>
-    <main class="main">
-      <GameRanges :ranges="gameStore.ranges"></GameRanges>
-    </main>
-    <footer class="footer">
+  <WelcomeModal v-if="gameStore.showWelcomeModal" />
+  
+  <div class="game-container">
+    <!-- Основной игровой интерфейс -->
+    <div class="header">
+      <q-btn
+        round
+        icon="help"
+        class="help-btn"
+        @click="gameStore.showWelcomeModal = true"
+      />
+      <div class="round-info text-primary">
+        Раунд: {{ gameStore.currentRound }}/{{ gameStore.totalRounds }}
+      </div>
+      <GameStatistics :statistics="gameStore.statistics" />
+    </div>
+
+    <div class="main-content">
+      <GameRanges :ranges="gameStore.ranges" />
+    </div>
+
+    <div class="footer">
       <q-btn
         size="22px"
-        class="q-px-xl q-py-xs"
-        color="secondary"
-        label="НАЧАТЬ"
+        class="action-button"
+        color="primary"
+        :label="gameStore.currentRound < gameStore.totalRounds ? 'Следующий год' : 'Завершить игру'"
         @click="gameStore.startGame"
       />
-    </footer>
+    </div>
+
+<!-- Модальное окно анализа раунда -->
+<q-dialog v-model="gameStore.showAnalysisModal" persistent>
+  <q-card style="min-width: 600px; max-width: 800px;">
+    <q-card-section class="bg-primary text-white">
+      <div class="text-h6" style="color: white">📊 Отчет за период: {{ gameStore.statistics[gameStore.statistics.length-1].date }}</div>
+    </q-card-section>
+
+    <q-card-section>
+      <div v-if="gameStore.analysisData.events.length > 0" class="q-mb-md">
+        <div class="text-subtitle1 q-mb-sm text-weight-bold">События:</div>
+        <q-list bordered separator>
+          <q-item
+            v-for="(event, index) in gameStore.analysisData.events"
+            :key="index"
+            class="bg-grey-2"
+          >
+            <q-item-section>
+              <q-item-label class="text-weight-bold">{{ event.split('\n')[0] }}</q-item-label>
+              <q-item-label caption>{{ event.split('\n')[1] }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </div>
+
+      <div>
+        <div class="text-subtitle1 q-mb-sm text-weight-bold">Основные изменения:</div>
+        <q-markup-table flat bordered>
+          <tbody>
+            <tr
+              v-for="(change, index) in gameStore.analysisData.changes"
+              :key="index"
+              :class="index % 2 === 0 ? 'bg-grey-1' : ''"
+            >
+              <td>{{ change }}</td>
+            </tr>
+          </tbody>
+        </q-markup-table>
+      </div>
+    </q-card-section>
+
+    <q-card-actions align="right">
+      <q-btn flat label="Закрыть" color="primary" v-close-popup />
+    </q-card-actions>
+  </q-card>
+</q-dialog>
+
+    <!-- Финальное модальное окно -->
+    <q-dialog v-model="gameStore.showFinalModal" maximized>
+      <q-card class="final-modal bg-grey-1">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h4" style="color: white;">Итоговый отчет (10 лет)</div>
+        </q-card-section>
+
+        <q-card-section class="scroll">
+          <div class="final-analysis q-pa-md">
+            <!-- Основные показатели -->
+            <q-card flat class="q-mb-md">
+              <q-card-section>
+                <div class="text-h5 text-dark">📊 Основные экономические показатели</div>
+                <div class="row q-col-gutter-md q-mt-sm">
+                  <div class="col-md-3 col-6" v-for="(stat, index) in mainStats" :key="index">
+                    <q-card bordered flat>
+                      <q-card-section>
+                        <div class="text-subtitle1 text-dark">{{ stat.name }}</div>
+                        <div class="text-h6">
+                          {{ stat.value.toFixed(2) }} {{ stat.unit }}
+                          <span :class="stat.isPositive ? 'text-positive' : 'text-negative'">
+                            ({{ stat.change > 0 ? '+' : '' }}{{ stat.change.toFixed(2) }})
+                          </span>
+                        </div>
+                      </q-card-section>
+                    </q-card>
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
+
+            <!-- Рейтинг страны -->
+            <q-card flat class="q-mb-md">
+              <q-card-section>
+                <div class="text-h5 text-dark">🏆 Позиция в мировом рейтинге</div>
+                <div class="text-body1 q-mt-sm text-dark">
+                  Ваша страна занимает <strong>{{ countryRanking.rank }}</strong> место в мировом экономическом рейтинге.
+                  Ближайшие соседи: {{ countryRanking.neighbors[0] }} ({{ countryRanking.rank-1 }})
+                  и {{ countryRanking.neighbors[1] }} ({{ countryRanking.rank+1 }}).
+                </div>
+              </q-card-section>
+            </q-card>
+
+            <!-- Оценка экономики -->
+            <q-card flat class="q-mb-md">
+              <q-card-section>
+                <div class="text-h5 text-dark">📈 Оценка экономического состояния</div>
+                <div class="text-body1 q-mt-sm text-dark">
+                  {{ economicAssessment }}
+                </div>
+              </q-card-section>
+            </q-card>
+
+            <!-- Графики -->
+            <div class="row q-col-gutter-md">
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">Динамика ВВП</div>
+                    <canvas ref="gdpChart"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">Уровень инфляции</div>
+                    <canvas ref="inflationChart"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">Уровень безработицы</div>
+                    <canvas ref="unemploymentChart"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">Промышленное производство</div>
+                    <canvas ref="industrialChart"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="bg-grey-3">
+          <q-btn flat label="Закрыть" color="primary" v-close-popup />
+          <q-btn flat label="Новая игра" color="positive" @click="gameStore.resetGame" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
-<style scoped>
-.game{
-  width: 100%;
+<style scoped lang="scss">
+.game-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  align-self: center;
+  gap: 20px;
+  background-color: #f5f5f5;
+}
+
+.header {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.round-info {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.main-content {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.footer {
+  display: flex;
   justify-content: center;
-  gap: 30px;
 }
-header{
-   flex: 0 0 auto;
-   display: flex;
-   justify-content: center;
+
+.action-button {
+  padding: 10px 30px;
+  font-weight: bold;
 }
-.main{
-   flex: 1 0 auto;
+
+.final-modal {
+  width: 95vw;
+  max-width: 1400px;
 }
-footer{
-   flex: 0 0 auto;
-   display: flex;
-   justify-content: center;
+
+.text-positive {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.text-negative {
+  color: #F44336;
+  font-weight: bold;
+}
+
+.text-dark {
+  color: #333;
+}
+
+canvas {
+  width: 100% !important;
+  height: 300px !important;
+}
+
+.stat-item {
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 8px 0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.analysis-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 1rem;
+  color: #333;
+}
+.event-message {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #333;
+  padding: 8px 0;
+}
+
+.q-dialog__inner--minimized > div {
+  max-width: 600px;
+}
+
+.q-card__section--event {
+  padding: 20px;
+}
+
+.q-markup-table {
+  width: 100%;
+}
+
+.q-markup-table td {
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.text-subtitle1 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.q-item__label {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}.event-message {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #212121;
+  padding: 8px 0;
+}
+
+.q-dialog__inner--minimized > div {
+  max-width: 600px;
+  background: white;
+}
+
+.q-card {
+  background: white;
+  color: #212121;
+}
+
+.q-card__section {
+  padding: 20px;
+}
+
+.q-markup-table {
+  width: 100%;
+  background: white;
+}
+
+.q-markup-table td {
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  color: #212121;
+  border-color: #e0e0e0;
+}
+
+.text-subtitle1 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #212121;
+}
+
+.q-item {
+  color: #212121;
+}
+
+.q-item__label {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #212121;
+}
+
+.q-item__label--caption {
+  color: #616161;
+}
+
+.final-modal {
+  background: white;
+}
+
+.text-h4, .text-h5, .text-h6 {
+  color: #212121;
+}
+.help-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 1000;
 }
 </style>
+
+
+
+
+
+
+
+
