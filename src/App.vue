@@ -13,6 +13,10 @@ const gdpChart = ref<HTMLCanvasElement>();
 const inflationChart = ref<HTMLCanvasElement>();
 const unemploymentChart = ref<HTMLCanvasElement>();
 const industrialChart = ref<HTMLCanvasElement>();
+const gdp = ref<HTMLCanvasElement>();
+const budgetDeficit = ref<HTMLCanvasElement>();
+const foreignReserves = ref<HTMLCanvasElement>();
+const tradeBalance = ref<HTMLCanvasElement>();
 let chartInstances: Chart[] = [];
 
 // Полная статистика всех показателей
@@ -79,22 +83,47 @@ onMounted(() => {
 function initCharts() {
   destroyCharts();
 
-  if (!gdpChart.value || !inflationChart.value || !unemploymentChart.value || !industrialChart.value) return;
-
   const labels = gameStore.statistics.map(s => s.date);
-  const colors = ['#4CAF50', '#F44336', '#FF9800', '#2196F3'];
+  const colors = ['#4CAF50', '#F44336', '#2196F3', '#FF9800', '#9C27B0', '#607D8B', '#795548', '#3F51B5'];
 
-  const charts = [
-    { ref: gdpChart, data: gameStore.statistics.map(s => s.firstColumn.gdp.value), label: 'ВВП (млрд $)', color: colors[0] },
-    { ref: inflationChart, data: gameStore.statistics.map(s => s.firstColumn.inflation.value), label: 'Инфляция (%)', color: colors[1] },
-    { ref: unemploymentChart, data: gameStore.statistics.map(s => s.firstColumn.unemployment.value), label: 'Безработица (%)', color: colors[2] },
-    { ref: industrialChart, data: gameStore.statistics.map(s => s.secondColumn.industrialOutput.value), label: 'Промпроизводство (%)', color: colors[3] }
+  const chartsConfig = [
+    { ref: gdpChart, dataKey: 'firstColumn.gdp.value', label: 'ВВП (млрд $)' },
+    { ref: inflationChart, dataKey: 'firstColumn.inflation.value', label: 'Инфляция (%)' },
+    { ref: unemploymentChart, dataKey: 'firstColumn.unemployment.value', label: 'Безработица (%)' },
+    { ref: industrialChart, dataKey: 'secondColumn.industrialOutput.value', label: 'Промпроизводство (%)' },
+    { ref: gdp, dataKey: 'firstColumn.gdp.value', label: 'ВВП (млрд $)' },
+    { ref: budgetDeficit, dataKey: 'secondColumn.budgetDeficit.value', label: 'Дефицит бюджета (%)' },
+    { ref: foreignReserves, dataKey: 'secondColumn.foreignReserves.value', label: 'Резервы (млрд $)' },
+    { ref: tradeBalance, dataKey: 'secondColumn.tradeBalance.value', label: 'Торг. баланс (млрд $)' }
   ];
 
-  charts.forEach((chart, i) => {
+  chartsConfig.forEach((chart, i) => {
     if (chart.ref.value) {
-      const instance = new Chart(chart.ref.value, getChartConfig(labels, chart.data, chart.label, chart.color));
-      chartInstances.push(instance);
+      const data = gameStore.statistics.map(s => {
+        const keys = chart.dataKey.split('.');
+        return keys.reduce((obj, key) => obj[key], s);
+      });
+
+      new Chart(chart.ref.value, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: chart.label,
+            data,
+            borderColor: colors[i],
+            backgroundColor: `${colors[i]}20`,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
     }
   });
 }
@@ -161,7 +190,7 @@ const economicAssessment = computed(() => {
 
 <template>
   <WelcomeModal v-if="gameStore.showWelcomeModal" />
-  
+
   <div class="game-container">
     <!-- Основной игровой интерфейс -->
     <div class="header">
@@ -324,6 +353,40 @@ const economicAssessment = computed(() => {
                   <q-card-section>
                     <div class="text-h6 text-dark">Промышленное производство</div>
                     <canvas ref="industrialChart"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">ВВП (млрд $)</div>
+                    <canvas ref="gdp"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">Дефицит бюджета (%)</div>
+                    <canvas ref="budgetDeficit"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">Золотовалютные резервы (млрд $)</div>
+                    <canvas ref="foreignReserves"></canvas>
+                  </q-card-section>
+                </q-card>
+              </div>
+              <div class="col-md-6 col-12">
+                <q-card flat bordered>
+                  <q-card-section>
+                    <div class="text-h6 text-dark">Торговый баланс (млрд $)</div>
+                    <canvas ref="tradeBalance"></canvas>
                   </q-card-section>
                 </q-card>
               </div>
