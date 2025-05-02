@@ -6,6 +6,7 @@ import type { IRow, RangeRow } from '../types/gameTypes'
 export const useGameStore = defineStore("game", () => {
   const LOCAL_STORAGE_KEY = 'economic_game_data';
 
+
   // Статистика по умолчанию
   const statistics = ref<IRow[]>([{
     date: "1998 год",
@@ -103,26 +104,26 @@ export const useGameStore = defineStore("game", () => {
     const effects = {
       // Центробанк
       interestRate: {
-        gdpGrowth: (v: number) => -0.8 * Math.pow(v/50, 1.3),
-        inflation: (v: number) => -1.2 * Math.sqrt(v/50),
-        budgetDeficit: (v: number) => 0.3 * (v/50) // Рост ставок → рост госдолга
+        gdpGrowth: (v: number) => -0.1 * (v - 50),
+        inflation: (v: number) => -0.08 * (v - 50),
+        budgetDeficit: (v: number) => 0.05 * (v - 50)
       },
       moneySupply: {
-        gdp: (v: number) => 1.2 * Math.log1p(v/50),
-        inflation: (v: number) => 1.5 * Math.pow(v/50, 1.5),
-        foreignReserves: (v: number) => -0.5 * (v/50) // Эмиссия снижает резервы
+        gdp: (v: number) => 0.1 * (v - 50),
+        inflation: (v: number) => 0.15 * (v - 50),
+        foreignReserves: (v: number) => -0.1 * (v - 50)
       },
       // Бизнес
       productionInvestment: {
-        gdp: (v: number) => 1.8 * Math.sqrt(v/50),
-        industrialOutput: (v: number) => 1.5 * (v/50),
-        tradeBalance: (v: number) => 0.6 * (v/50) // Инвестиции → экспорт
+        gdp: (v: number) => 0.2 * (v - 50),
+        industrialOutput: (v: number) => 0.25 * (v - 50),
+        tradeBalance: (v: number) => 0.1 * (v - 50)
       },
       // Правительство
       govSpending: {
-        gdpGrowth: (v: number) => 0.7 * (v/50),
-        budgetDeficit: (v: number) => 0.9 * (v/50),
-        unemployment: (v: number) => -0.5 * (v/50)
+        gdpGrowth: (v: number) => 0.1 * (v - 50),
+        budgetDeficit: (v: number) => 0.2 * (v - 50),
+        unemployment: (v: number) => -0.15 * (v - 50)
       }
     };
 
@@ -137,7 +138,7 @@ export const useGameStore = defineStore("game", () => {
       policies.forEach(([policy, { value }]) => {
         if (effects[policy]) {
           Object.entries(effects[policy]).forEach(([indicator, formula]) => {
-            const change = formula(value) * ((value - 50) / 50);
+            const change = formula(value);
             if (stats.firstColumn[indicator]) {
               stats.firstColumn[indicator].value += change;
             }
@@ -152,7 +153,7 @@ export const useGameStore = defineStore("game", () => {
 
   function calculateComplexMetrics(stats: IRow) {
     // Динамика ВВП
-    stats.firstColumn.gdp.value *= (1 + stats.firstColumn.gdpGrowth.value/100);
+    stats.firstColumn.gdp.value *= (1 - Math.max(0, stats.firstColumn.inflation.value - 3)/200);
 
     // Влияние инфляции на ВВП
     stats.firstColumn.gdp.value *= (1 - Math.max(0, stats.firstColumn.inflation.value - 3)/200);
@@ -263,7 +264,7 @@ export const useGameStore = defineStore("game", () => {
   function finalizeStatistics(stats: IRow) {
     // Ограничители
     stats.firstColumn.unemployment.value = Math.max(0.5, stats.firstColumn.unemployment.value);
-    stats.firstColumn.inflation.value = Math.max(-2, Math.min(50, stats.firstColumn.inflation.value));
+    stats.firstColumn.inflation.value = Math.min(stats.firstColumn.inflation.value, 50);
     stats.secondColumn.foreignReserves.value = Math.max(0, stats.secondColumn.foreignReserves.value);
 
     // Округление
