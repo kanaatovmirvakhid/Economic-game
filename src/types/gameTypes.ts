@@ -7,18 +7,18 @@ export interface IStatItem {
 export interface IRow {
   date: string;
   firstColumn: {
-    gdpGrowth: IStatItem;
-    gdp: IStatItem;
-    unemployment: IStatItem;
-    inflation: IStatItem;
-    [key: string]: IStatItem;
+    gdpGrowth: IStatItem;       // Темп прироста ВВП (%)
+    gdp: IStatItem;             // ВВП (млрд $)
+    unemployment: IStatItem;    // Безработица (%)
+    inflation: IStatItem;       // Потребительская инфляция (%)
+    [key: string]: any;
   };
   secondColumn: {
-    budgetDeficit: IStatItem;
-    foreignReserves: IStatItem;
-    tradeBalance: IStatItem;
-    industrialOutput: IStatItem;
-    [key: string]: IStatItem;
+    budgetDeficit: IStatItem;   // Дефицит бюджета (млн долл -> в игре %)
+    foreignReserves: IStatItem; // Золотовалютный резерв (долл -> в игре млрд)
+    tradeBalance: IStatItem;    // Торговый баланс (млн долл -> в игре млрд)
+    industrialOutput: IStatItem;// Индекс промпроизводства (%)
+    [key: string]: any;
   };
 }
 

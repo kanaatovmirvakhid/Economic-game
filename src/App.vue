@@ -21,36 +21,81 @@ let chartInstances: Chart[] = [];
 
 // Полная статистика всех показателей
 const mainStats = computed(() => {
-  if (gameStore.statistics.length < 2) return [];
+  // 1. Проверяем, что в массиве есть данные
+  if (gameStore.statistics.length === 0) return [];
 
+  // ИСПРАВЛЕНИЕ: Добавляем [0], чтобы получить объект за 1998 год
   const first = gameStore.statistics[0];
+
+  // Берем последний элемент для текущих данных
   const last = gameStore.statistics[gameStore.statistics.length - 1];
 
+  // Флаг наличия истории (нужен как минимум один совершенный ход после 1998 года)
+  const hasHistory = gameStore.statistics.length > 1;
+
+  // Функция-помощник для округления разницы (чтобы не было 0.300000000004)
+  const getChange = (lastVal: number, firstVal: number) => {
+    return hasHistory ? Number((lastVal - firstVal).toFixed(2)) : 0;
+  };
+
   return [
-    { name: 'ВВП', value: last.firstColumn.gdp.value, unit: 'млрд $',
-      change: last.firstColumn.gdp.value - first.firstColumn.gdp.value,
-      isPositive: last.firstColumn.gdp.value > first.firstColumn.gdp.value },
-    { name: 'Рост ВВП', value: last.firstColumn.gdpGrowth.value, unit: '%',
-      change: last.firstColumn.gdpGrowth.value - first.firstColumn.gdpGrowth.value,
-      isPositive: last.firstColumn.gdpGrowth.value > first.firstColumn.gdpGrowth.value },
-    { name: 'Инфляция', value: last.firstColumn.inflation.value, unit: '%',
-      change: last.firstColumn.inflation.value - first.firstColumn.inflation.value,
-      isPositive: last.firstColumn.inflation.value < first.firstColumn.inflation.value }, // Инфляция - меньше лучше
-    { name: 'Безработица', value: last.firstColumn.unemployment.value, unit: '%',
-      change: last.firstColumn.unemployment.value - first.firstColumn.unemployment.value,
-      isPositive: last.firstColumn.unemployment.value < first.firstColumn.unemployment.value },
-    { name: 'Дефицит бюджета', value: last.secondColumn.budgetDeficit.value, unit: '%',
-      change: last.secondColumn.budgetDeficit.value - first.secondColumn.budgetDeficit.value,
-      isPositive: last.secondColumn.budgetDeficit.value < first.secondColumn.budgetDeficit.value },
-    { name: 'Золотовалютные резервы', value: last.secondColumn.foreignReserves.value, unit: 'млрд $',
-      change: last.secondColumn.foreignReserves.value - first.secondColumn.foreignReserves.value,
-      isPositive: last.secondColumn.foreignReserves.value > first.secondColumn.foreignReserves.value },
-    { name: 'Торговый баланс', value: last.secondColumn.tradeBalance.value, unit: 'млрд $',
-      change: last.secondColumn.tradeBalance.value - first.secondColumn.tradeBalance.value,
-      isPositive: last.secondColumn.tradeBalance.value > first.secondColumn.tradeBalance.value },
-    { name: 'Промпроизводство', value: last.secondColumn.industrialOutput.value, unit: '%',
-      change: last.secondColumn.industrialOutput.value - first.secondColumn.industrialOutput.value,
-      isPositive: last.secondColumn.industrialOutput.value > first.secondColumn.industrialOutput.value }
+    {
+      name: 'Темп прироста ВВП (%)',
+      value: last.firstColumn.gdpGrowth.value,
+      unit: '%',
+      change: getChange(last.firstColumn.gdpGrowth.value, first.firstColumn.gdpGrowth.value),
+      isPositive: last.firstColumn.gdpGrowth.value > 0
+    },
+    {
+      name: 'ВВП (млрд. $)',
+      value: last.firstColumn.gdp.value,
+      unit: 'млрд $',
+      change: getChange(last.firstColumn.gdp.value, first.firstColumn.gdp.value),
+      isPositive: last.firstColumn.gdp.value > first.firstColumn.gdp.value
+    },
+    {
+      name: 'Безработица (% рабочей силы)',
+      value: last.firstColumn.unemployment.value,
+      unit: '%',
+      change: getChange(last.firstColumn.unemployment.value, first.firstColumn.unemployment.value),
+      // Положительно, если безработица падает
+      isPositive: last.firstColumn.unemployment.value < first.firstColumn.unemployment.value
+    },
+    {
+      name: 'Потребительская инфляция (%)',
+      value: last.firstColumn.inflation.value,
+      unit: '%',
+      change: getChange(last.firstColumn.inflation.value, first.firstColumn.inflation.value),
+      isPositive: last.firstColumn.inflation.value < 10
+    },
+    {
+      name: 'Дефицит бюджета',
+      value: last.secondColumn.budgetDeficit.value,
+      unit: '%',
+      change: getChange(last.secondColumn.budgetDeficit.value, first.secondColumn.budgetDeficit.value),
+      isPositive: last.secondColumn.budgetDeficit.value < 5
+    },
+    {
+      name: 'Золотовалютный резерв',
+      value: last.secondColumn.foreignReserves.value,
+      unit: 'млрд $',
+      change: getChange(last.secondColumn.foreignReserves.value, first.secondColumn.foreignReserves.value),
+      isPositive: last.secondColumn.foreignReserves.value > first.secondColumn.foreignReserves.value
+    },
+    {
+      name: 'Торговый баланс',
+      value: last.secondColumn.tradeBalance.value,
+      unit: 'млрд $',
+      change: getChange(last.secondColumn.tradeBalance.value, first.secondColumn.tradeBalance.value),
+      isPositive: last.secondColumn.tradeBalance.value > 0
+    },
+    {
+      name: 'Индекс промпроизводства',
+      value: last.secondColumn.industrialOutput.value,
+      unit: '%',
+      change: getChange(last.secondColumn.industrialOutput.value, first.secondColumn.industrialOutput.value),
+      isPositive: last.secondColumn.industrialOutput.value > 30
+    }
   ];
 });
 
@@ -82,48 +127,40 @@ onMounted(() => {
 
 function initCharts() {
   destroyCharts();
-
   const labels = gameStore.statistics.map(s => s.date);
-  const colors = ['#4CAF50', '#F44336', '#2196F3', '#FF9800', '#9C27B0', '#607D8B', '#795548', '#3F51B5'];
+  const colors = [
+    '#4CAF50', '#F44336', '#2196F3', '#FF9800',
+    '#9C27B0', '#607D8B', '#795548', '#3F51B5'
+  ];
 
+  // Полный список из 8 графиков согласно твоему исследованию
   const chartsConfig = [
-    { ref: gdpChart, dataKey: 'firstColumn.gdp.value', label: 'ВВП (млрд $)' },
-    { ref: inflationChart, dataKey: 'firstColumn.inflation.value', label: 'Инфляция (%)' },
-    { ref: unemploymentChart, dataKey: 'firstColumn.unemployment.value', label: 'Безработица (%)' },
-    { ref: industrialChart, dataKey: 'secondColumn.industrialOutput.value', label: 'Промпроизводство (%)' },
+    // Первая колонка (firstColumn)
+    { ref: gdpChart, dataKey: 'firstColumn.gdpGrowth.value', label: 'Темп роста ВВП (%)' },
     { ref: gdp, dataKey: 'firstColumn.gdp.value', label: 'ВВП (млрд $)' },
+    { ref: unemploymentChart, dataKey: 'firstColumn.unemployment.value', label: 'Безработица (%)' },
+    { ref: inflationChart, dataKey: 'firstColumn.inflation.value', label: 'Инфляция (%)' },
+
+    // Вторая колонка (secondColumn)
     { ref: budgetDeficit, dataKey: 'secondColumn.budgetDeficit.value', label: 'Дефицит бюджета (%)' },
-    { ref: foreignReserves, dataKey: 'secondColumn.foreignReserves.value', label: 'Резервы (млрд $)' },
-    { ref: tradeBalance, dataKey: 'secondColumn.tradeBalance.value', label: 'Торг. баланс (млрд $)' }
+    { ref: foreignReserves, dataKey: 'secondColumn.foreignReserves.value', label: 'Золотовалютные резервы (млрд $)' },
+    { ref: tradeBalance, dataKey: 'secondColumn.tradeBalance.value', label: 'Торговый баланс (млрд $)' },
+    { ref: industrialChart, dataKey: 'secondColumn.industrialOutput.value', label: 'Индекс промпроизводства (%)' }
   ];
 
   chartsConfig.forEach((chart, i) => {
-    if (chart.ref.value) {
+    // Проверяем, что ref существует и привязан к canvas в шаблоне
+    if (chart.ref && chart.ref.value) {
       const data = gameStore.statistics.map(s => {
         const keys = chart.dataKey.split('.');
-        return keys.reduce((obj, key) => obj[key], s);
+        const val = keys.reduce((obj: any, key: string) =>
+          (obj && obj[key] !== undefined) ? obj[key] : null, s as any);
+        return val as unknown as number;
       });
 
-      new Chart(chart.ref.value, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: chart.label,
-            data,
-            borderColor: colors[i],
-            backgroundColor: `${colors[i]}20`,
-            tension: 0.3,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          }
-        }
-      });
+      const config = getChartConfig(labels, data, chart.label, colors[i]);
+      const newChart = new Chart(chart.ref.value, config as any);
+      chartInstances.push(newChart);
     }
   });
 }
@@ -134,8 +171,17 @@ function destroyCharts() {
 }
 
 function getChartConfig(labels: string[], data: number[], label: string, color: string) {
+  const getUnit = (l: string) => {
+    if (l.includes('ln')) return '';
+    if (l.includes('ВВП') && !l.includes('рост')) return ' млрд $';
+    if (l.includes('Резервы') || l.includes('баланс')) return ' млрд $';
+    return '%';
+  };
+
+  const unit = getUnit(label);
+
   return {
-    type: 'line',
+    type: 'line' as const, // Указываем литеральный тип для Chart.js
     data: {
       labels,
       datasets: [{
@@ -155,14 +201,18 @@ function getChartConfig(labels: string[], data: number[], label: string, color: 
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (context) => `${label}: ${context.raw}${label.includes('ВВП') ? ' млрд $' : '%'}`
+            // Исправляем any на конкретный тип контекста (или оставляем так, если линтер пропустит)
+            label: (context: { raw: unknown }) => `${label}: ${context.raw}${unit}`
           }
         }
       },
       scales: {
         y: {
-          beginAtZero: label !== 'ВВП (млрд $)',
-          title: { display: true, text: label.includes('ВВП') ? 'млрд $' : '%' }
+          beginAtZero: !label.includes('ВВП'),
+          title: {
+            display: true,
+            text: unit.trim() || 'индекс'
+          }
         }
       }
     }
@@ -283,6 +333,7 @@ const economicAssessment = computed(() => {
                   <div class="col-md-3 col-6" v-for="(stat, index) in mainStats" :key="index">
                     <q-card bordered flat>
                       <q-card-section>
+                        <!-- Названия теперь берутся из объекта, который мы обновили ниже -->
                         <div class="text-subtitle1 text-dark">{{ stat.name }}</div>
                         <div class="text-h6">
                           {{ stat.value.toFixed(2) }} {{ stat.unit }}
@@ -324,7 +375,7 @@ const economicAssessment = computed(() => {
               <div class="col-md-6 col-12">
                 <q-card flat bordered>
                   <q-card-section>
-                    <div class="text-h6 text-dark">Динамика ВВП</div>
+                    <div class="text-h6 text-dark">Темп роста ВВП (%)</div>
                     <canvas ref="gdpChart"></canvas>
                   </q-card-section>
                 </q-card>
@@ -333,7 +384,7 @@ const economicAssessment = computed(() => {
               <div class="col-md-6 col-12">
                 <q-card flat bordered>
                   <q-card-section>
-                    <div class="text-h6 text-dark">Уровень инфляции</div>
+                    <div class="text-h6 text-dark">Инфляция (%)</div>
                     <canvas ref="inflationChart"></canvas>
                   </q-card-section>
                 </q-card>
@@ -342,7 +393,7 @@ const economicAssessment = computed(() => {
               <div class="col-md-6 col-12">
                 <q-card flat bordered>
                   <q-card-section>
-                    <div class="text-h6 text-dark">Уровень безработицы</div>
+                    <div class="text-h6 text-dark">Безработица (%)</div>
                     <canvas ref="unemploymentChart"></canvas>
                   </q-card-section>
                 </q-card>
@@ -351,7 +402,7 @@ const economicAssessment = computed(() => {
               <div class="col-md-6 col-12">
                 <q-card flat bordered>
                   <q-card-section>
-                    <div class="text-h6 text-dark">Промышленное производство</div>
+                    <div class="text-h6 text-dark">Индекс промпроизводства (%)</div>
                     <canvas ref="industrialChart"></canvas>
                   </q-card-section>
                 </q-card>
