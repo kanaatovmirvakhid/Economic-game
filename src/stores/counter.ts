@@ -7,57 +7,58 @@ export const useGameStore = defineStore("game", () => {
 
 
   // Статистика по умолчанию
-  const statistics = ref<IRow[]>([{
-    date: "1998 год",
-    firstColumn: {
-      gdpGrowth: { value: -1.9, name: "Темп прироста ВВП", symbol: '%', canBeNegative: true },
-      gdp: { value: 270.96, name: "ВВП", symbol: 'млрд $' },
-      unemployment: { value: 11.32, name: "Безработица", symbol: '%' },
-      inflation: { value: 10.6, name: "Потребительская инфляция", symbol: '%' }
-    },
-    secondColumn: {
-      budgetDeficit: { value: 5.8, name: "Дефицит бюджета", symbol: '%', canBeNegative: true },
-      foreignReserves: { value: 12.4, name: "Золотовалютный резерв", symbol: 'млрд $' },
-      tradeBalance: { value: -2.1, name: "Торговый баланс", symbol: 'млрд $', canBeNegative: true },
-      industrialOutput: { value: 30.6, name: "Индекс промпроизводства", symbol: '%' }
-    }
-  }]);
+ const statistics = ref<IRow[]>([{
+  date: "1998 год",
+  firstColumn: {
+    gdpGrowth: { value: -5.30, name: "Темп прироста ВВП", symbol: '%' },
+    gdp: { value: 270955, name: "ВВП", symbol: 'млн $' },
+    lnGdp: { value: 12.5097, name: "lnGDP", symbol: '' },
+    unemployment: { value: 13.26, name: "Безработица", symbol: '%' },
+    inflation: { value: 84.44, name: "Инфляция", symbol: '%' }
+  },
+  secondColumn: { // Теперь TypeScript увидит это свойство
+    budgetDeficit: { value: 132397.2, name: "Дефицит бюджета", symbol: 'млн $' },
+    foreignReserves: { value: 14738, name: "Резервы", symbol: 'млн $' },
+    tradeBalance: { value: 16.43, name: "Торг. баланс", symbol: 'млн $' },
+    industrialOutput: { value: 33.94, name: "Промпроизводство", symbol: '%' }
+  }
+}]);
 
-  // 2. Новые рычаги управления (на основе регрессоров X) [1, 2]
   const ranges = ref<RangeRow[]>([
-  {
+    {
       team: "Центробанк",
       firstColumn: {
-        interestRate: { value: 60, name: "Ключевая ставка" },
-        moneySupply: { value: 40, name: "Денежная масса" },
-        creditPrivate: { value: 50, name: "Кредит частному сектору" }
+        interestRate: { value: 19.62, min: 0, max: 100, name: "Ключевая ставка (%)", start: 19.62 },
+        moneySupply: { value: 20.80, min: 5, max: 120, name: "Денежная масса (% от ВВП)", start: 20.80 },
+        creditPrivate: { value: 15.63, min: 0, max: 80, name: "Кредит частному сектору (% от ВВП)", start: 15.63 }
       }
     },
     {
       team: "Бизнес",
       secondColumn: {
-        investments: { value: 35, name: "Инвестиции в осн. капитал" },
-        wageCosts: { value: 45, name: "Затраты на зарплаты" },
-        cpiPrices: { value: 65, name: "Индекс потребительских цен" }
+        investments: { value: 16.15, min: 5, max: 50, name: "Инвестиции в осн. капитал (% от ВВП)", start: 16.15 },
+        wageCosts: { value: 12.70, min: 5, max: 80, name: "Затраты на зарплаты (индекс)", start: 12.70 },
+        cpiPrices: { value: 13.71, min: 10, max: 160, name: "Индекс потреб. цен", start: 13.71 }
       }
     },
     {
       team: "Потребители",
       thirdColumn: {
-        protests: { value: 70, name: "Недовольство граждан" },
-        householdCons: { value: 50, name: "Потребление домохозяйств" },
-        savings: { value: 50, name: "Сбережения" }
+        protests: { value: 34.3, min: 0, max: 200, name: "Количество протестов (акций)", start: 34.3 },
+        householdCons: { value: 57.50, min: 30, max: 90, name: "Потребление домохозяйств (% от ВВП)", start: 57.50 },
+        savings: { value: 21.63, min: 5, max: 60, name: "Сбережения (% ВВП)", start: 21.63 }
       }
     },
     {
       team: "Правительство",
       fourthColumn: {
-        taxes: { value: 50, name: "Налоги" },
-        govSpending: { value: 50, name: "Государственные расходы" },
-        laborParticipation: { value: 50, name: "Участие в рабочей силе" }
+        taxes: { value: 11.24, min: 5, max: 45, name: "Налоги (% от ВВП)", start: 11.24 },
+        govSpending: { value: 25.04, min: 5, max: 45, name: "Госрасходы (% от ВВП)", start: 25.04 },
+        laborParticipation: { value: 60.40, min: 40, max: 90, name: "Участие в рабочей силе (%)", start: 60.40 }
       }
     }
   ]);
+
 
   // Состояние игры
   const currentRound = ref(1);
@@ -102,68 +103,74 @@ export const useGameStore = defineStore("game", () => {
 
 
 function applyPolicyEffects(stats: IRow) {
-    // УДАЛИЛИ внутренний getVal, используем внешний из контекста выше
-const getVal = (teamIdx: number, col: string, key: string): number => {
+  const getDelta = (teamIdx: number, col: string, key: string) => {
     const team = ranges.value[teamIdx];
-    // Проверяем: есть ли команда, есть ли у неё эта колонка, и есть ли в ней этот ключ
-    if (team && (team as any)[col] && (team as any)[col][key]) {
-      return (team as any)[col][key].value - 50;
-    }
-    // Если чего-то нет, возвращаем 0 (нейтральный эффект), чтобы игра не падала
-    return 0;
+    const item = (team as any)?.[col]?.[key];
+    return item ? item.value - item.start : 0;
   };
-    // X-переменные (рычаги) - теперь безопасно получают значения
-    const kr = getVal(0, 'firstColumn', 'interestRate');
-    const ms = getVal(0, 'firstColumn', 'moneySupply');
-    const cp = getVal(0, 'firstColumn', 'creditPrivate');
-    const inv = getVal(1, 'secondColumn', 'investments');
-    const sal = getVal(1, 'secondColumn', 'wageCosts');
-    const cpi = getVal(1, 'secondColumn', 'cpiPrices');
-    const pr = getVal(2, 'thirdColumn', 'protests');
-    const hc = getVal(2, 'thirdColumn', 'householdCons');
-    const sv = getVal(2, 'thirdColumn', 'savings');
-    const tx = getVal(3, 'fourthColumn', 'taxes');
-    const gs = getVal(3, 'fourthColumn', 'govSpending');
-    const lp = getVal(3, 'fourthColumn', 'laborParticipation');
 
-    // --- ПРИМЕНЕНИЕ ТОЛЬКО ЗНАЧИМЫХ КОЭФФИЦИЕНТОВ [1-3] ---
+  // Дельты рычагов
+  const dKr = getDelta(0, 'firstColumn', 'interestRate');
+  const dMs = getDelta(0, 'firstColumn', 'moneySupply');
+  const dCp = getDelta(0, 'firstColumn', 'creditPrivate');
+  const dInv = getDelta(1, 'secondColumn', 'investments');
+  const dSal = getDelta(1, 'secondColumn', 'wageCosts');
+  const dCpi = getDelta(1, 'secondColumn', 'cpiPrices');
+  const dHc = getDelta(2, 'thirdColumn', 'householdCons');
+  const dSv = getDelta(2, 'thirdColumn', 'savings');
+  const dTx = getDelta(3, 'fourthColumn', 'taxes');
+  const dGs = getDelta(3, 'fourthColumn', 'govSpending');
+  const dLp = getDelta(3, 'fourthColumn', 'laborParticipation');
 
-    // 1. Темп прироста ВВП (%)
-    stats.firstColumn.gdpGrowth.value += (kr * -0.1181) + (inv * 0.4483) + (cpi * 0.0834) + (pr * -0.044) + (hc * -0.1648) + (tx * 0.1589) + (sv * 0.1458);
+  // ИСПРАВЛЕННЫЙ ИНДЕКС: Потребители находятся под индексом [1]
+  const prItem = ranges.value[1].thirdColumn?.protests;
+  const dPr = prItem ? (prItem.value / 1000) - (prItem.start / 1000) : 0;
 
-    // 3. Безработица (%)
-    stats.firstColumn.unemployment.value += (ms * -0.0305) + (cp * -0.0549) + (inv * -0.1405) + (cpi * -0.066) + (pr * 0.0459) + (tx * 0.151) + (gs * 0.4242);
+  // ПРИМЕНЕНИЕ КОЭФФИЦИЕНТОВ ИЗ ВАШЕГО ИССЛЕДОВАНИЯ
+  // 1. Темп роста ВВП
+  stats.firstColumn.gdpGrowth.value += (dKr * -0.1181) + (dInv * 0.4483) + (dCpi * 0.0834) + (dPr * -44.62) + (dHc * -0.1648) + (dTx * 0.1589) + (dSv * 0.1458);
 
-    // 4. Инфляция (%)
-    stats.firstColumn.inflation.value += (kr * 0.4535) + (ms * -0.2582) + (cp * -0.2535) + (sal * -0.4365) + (cpi * -0.2569) + (pr * 0.1857) + (hc * -0.7368) + (tx * 0.8774) + (sv * 0.6623);
+  // 2. lnGDP (скрытый технический показатель для точности расчетов)
+  stats.firstColumn.lnGdp.value += (dMs * 0.0161) + (dInv * 0.0812) + (dSal * -0.0553) + (dHc * 0.032) + (dLp * -0.0616) + (dTx * 0.0445) + (dSv * -0.0378);
 
-    // 5. Дефицит бюджета (%) - Коэффициенты делим на 100 для соответствия игровому масштабу
-    stats.secondColumn.budgetDeficit.value += (kr * -2.54) + (cpi * 1.45) + (hc * -2.50) + (lp * 4.56) + (sv * 3.15);
+  // 3. СИНХРОНИЗАЦИЯ: Обновляем видимый ВВП (млн $) через экспоненту lnGDP
+  stats.firstColumn.gdp.value = Math.round(Math.exp(stats.firstColumn.lnGdp.value));
 
-    // 6. Золотовалютный резерв (масштаб млрд $)
-    stats.secondColumn.foreignReserves.value += (ms * 0.21) + (inv * 1.54) + (sal * -0.60) + (cpi * 0.39) + (pr * -1.48) + (lp * -0.82);
+  // 4. Безработица и Инфляция
+  stats.firstColumn.unemployment.value += (dMs * -0.0305) + (dCp * -0.0549) + (dInv * -0.1405) + (dCpi * -0.066) + (dPr * 45.99) + (dTx * 0.151) + (dGs * 0.4242);
+  stats.firstColumn.inflation.value += (dKr * 0.4535) + (dMs * -0.2582) + (dCp * -0.2535) + (dSal * -0.4365) + (dCpi * -0.2569) + (dPr * 185.77) + (dHc * -0.7368) + (dTx * 0.8774) + (dSv * 0.6623);
 
-    // 7. Торговый баланс (масштаб млрд $)
-    stats.secondColumn.tradeBalance.value += (ms * -0.11) + (cp * -0.16) + (pr * 0.12) + (hc * -0.48) + (lp * 0.59) + (gs * -0.73) + (sv * 0.65);
-
-    // 8. Индекс промпроизводства (%)
-    stats.secondColumn.industrialOutput.value += (kr * -0.0815) + (sal * 0.257) + (cpi * 0.0835) + (pr * -0.043) + (lp * 0.2715) + (tx * -0.4198) + (gs * -1.1467) + (sv * 0.3637);
-  }
-
-function calculateComplexMetrics(stats: IRow) {
-  // Теперь stats.firstColumn.gdp существует благодаря правке в types
-  const growthFactor = 1 + (stats.firstColumn.gdpGrowth.value / 100);
-  stats.firstColumn.gdp.value *= growthFactor;
+  // 5. Второй блок (масштабировано до млн $)
+  stats.secondColumn.budgetDeficit.value += (dKr * -254.62) + (dCpi * 145.23) + (dHc * -250.22) + (dLp * 456.79) + (dSv * 315.42);
+  stats.secondColumn.foreignReserves.value += (dMs * 211) + (dInv * 1540) + (dSal * -607) + (dCpi * 395) + (dPr * -14800) + (dLp * -822);
+  stats.secondColumn.tradeBalance.value += (dMs * -119.58) + (dCp * -167.49) + (dPr * 120813) + (dHc * -488.25) + (dLp * 599) + (dGs * -738) + (dSv * 653);
+  stats.secondColumn.industrialOutput.value += (dKr * -0.0815) + (dSal * 0.257) + (dCpi * 0.0835) + (dPr * -43.93) + (dLp * 0.2715) + (dTx * -0.4198) + (dGs * -1.1467) + (dSv * 0.3637);
 }
 
-function applyIndicatorInteractions(stats: IRow) {
-  // Обновляем рейтинг на основе нового ВВП
-  const ranking = generateCountryRanking(stats.firstColumn.gdp.value);
-  console.log(`Текущее место в мире: ${ranking.rank}`); // Теперь функция используется
+function calculateComplexMetrics(stats: IRow) {
+    // Пересчет абсолютного ВВП на основе lnGDP для пользователя
+    stats.firstColumn.gdp.value = Math.round(Math.exp(stats.firstColumn.lnGdp.value));
+  }
 
-  // Взаимовлияние (на основе выводов отчета) [12, 13]
-  if (stats.firstColumn.inflation.value > 15) {
-    stats.firstColumn.gdpGrowth.value -= 2; // Гиперинфляция тормозит рост
+function applyIndicatorInteractions(stats: IRow) {
+  // 1. Влияние высокой инфляции на рост (Порог: 10%)
+  // Если инфляция выше 10%, каждый лишний процент отнимает 0.05% от роста ВВП
+  if (stats.firstColumn.inflation.value > 10) {
+    const penalty = (stats.firstColumn.inflation.value - 10) * 0.05;
+    stats.firstColumn.gdpGrowth.value -= penalty;
+  }
+
+  // 2. Влияние рецессии на безработицу
+  // Если темп роста ВВП отрицательный, безработица растет сама по себе
+  if (stats.firstColumn.gdpGrowth.value < 0) {
+    stats.firstColumn.unemployment.value += Math.abs(stats.firstColumn.gdpGrowth.value) * 0.1;
+  }
+
+  // 3. Большой дефицит бюджета «проедает» резервы
+  // Если дефицит > 3% ВВП, резервы падают на 200 млн $ за каждый лишний процент
+  if (stats.secondColumn.budgetDeficit.value > 3) {
+    const reserveDrain = (stats.secondColumn.budgetDeficit.value - 3) * 200;
+    stats.secondColumn.foreignReserves.value -= reserveDrain;
   }
 }
 
@@ -252,10 +259,11 @@ function generateFinalAnalysis() {
     };
   }
   function finalizeStatistics(stats: IRow) {
-    // Ограничители
-    stats.firstColumn.unemployment.value = Math.max(0.5, stats.firstColumn.unemployment.value);
-    stats.firstColumn.inflation.value = Math.min(stats.firstColumn.inflation.value, 50);
-    stats.secondColumn.foreignReserves.value = Math.max(0, stats.secondColumn.foreignReserves.value);
+ // Оставляем только те лимиты, которые не дают показателям стать отрицательными
+  stats.firstColumn.unemployment.value = Math.max(0, stats.firstColumn.unemployment.value);
+  stats.secondColumn.foreignReserves.value = Math.max(0, stats.secondColumn.foreignReserves.value);
+  // Инфляцию не ограничиваем сверху, чтобы видеть реальный кризис
+  stats.firstColumn.inflation.value = Math.max(-100, stats.firstColumn.inflation.value);
 
     // Округление
     const round = (obj: Record<string, { value: number }>) => {
@@ -328,33 +336,33 @@ function generateFinalAnalysis() {
     {
       team: "Центробанк",
       firstColumn: {
-        interestRate: { value: 60, name: "Ключевая ставка" },
-        moneySupply: { value: 40, name: "Денежная масса" },
-        creditPrivate: { value: 50, name: "Кредит частному сектору" } // Проверь это название
+        interestRate: { value: 19.62, min: 0, max: 100, name: "Ключевая ставка (%)", start: 19.62 },
+        moneySupply: { value: 20.80, min: 5, max: 120, name: "Денежная масса (% от ВВП)", start: 20.80 },
+        creditPrivate: { value: 15.63, min: 0, max: 80, name: "Кредит частному сектору (% от ВВП)", start: 15.63 }
       }
     },
     {
       team: "Бизнес",
       secondColumn: {
-        investments: { value: 35, name: "Инвестиции в осн. капитал" },
-        wageCosts: { value: 45, name: "Затраты на зарплаты" },
-        cpiPrices: { value: 65, name: "Индекс потребительских цен" }
+        investments: { value: 16.15, min: 5, max: 50, name: "Инвестиции в осн. капитал (% от ВВП)", start: 16.15 },
+        wageCosts: { value: 12.70, min: 5, max: 80, name: "Затраты на зарплаты (индекс)", start: 12.70 },
+        cpiPrices: { value: 13.71, min: 10, max: 160, name: "Индекс потреб. цен", start: 13.71 }
       }
     },
     {
       team: "Потребители",
       thirdColumn: {
-        protests: { value: 70, name: "Недовольство граждан" },
-        householdCons: { value: 50, name: "Потребление домохозяйств" },
-        savings: { value: 50, name: "Сбережения" }
+        protests: { value: 34.3, min: 0, max: 200, name: "Количество протестов (акций)", start: 34.3 },
+        householdCons: { value: 57.50, min: 30, max: 90, name: "Потребление домохозяйств (% от ВВП)", start: 57.50 },
+        savings: { value: 21.63, min: 5, max: 60, name: "Сбережения (% ВВП)", start: 21.63 }
       }
     },
     {
       team: "Правительство",
       fourthColumn: {
-        taxes: { value: 50, name: "Налоги" },
-        govSpending: { value: 50, name: "Государственные расходы" },
-        laborParticipation: { value: 50, name: "Участие в рабочей силе" }
+        taxes: { value: 11.24, min: 5, max: 45, name: "Налоги (% от ВВП)", start: 11.24 },
+        govSpending: { value: 25.04, min: 5, max: 45, name: "Госрасходы (% от ВВП)", start: 25.04 },
+        laborParticipation: { value: 60.40, min: 40, max: 90, name: "Участие в рабочей силе (%)", start: 60.40 }
       }
     }
   ];

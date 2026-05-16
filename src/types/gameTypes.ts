@@ -4,48 +4,64 @@ export interface IStatItem {
   symbol: string;
   canBeNegative?: boolean;
 }
+
 export interface IRow {
   date: string;
   firstColumn: {
-    gdpGrowth: IStatItem;       // Темп прироста ВВП (%)
-    gdp: IStatItem;             // ВВП (млрд $)
-    unemployment: IStatItem;    // Безработица (%)
-    inflation: IStatItem;       // Потребительская инфляция (%)
-    [key: string]: any;
+    gdpGrowth: IStatItem;
+    gdp: IStatItem;
+    lnGdp: IStatItem;
+    unemployment: IStatItem;
+    inflation: IStatItem;
+    [key: string]: IStatItem;
   };
+  // ДОБАВЛЯЕМ ЭТОТ БЛОК:
   secondColumn: {
-    budgetDeficit: IStatItem;   // Дефицит бюджета (млн долл -> в игре %)
-    foreignReserves: IStatItem; // Золотовалютный резерв (долл -> в игре млрд)
-    tradeBalance: IStatItem;    // Торговый баланс (млн долл -> в игре млрд)
-    industrialOutput: IStatItem;// Индекс промпроизводства (%)
-    [key: string]: any;
+    budgetDeficit: IStatItem;
+    foreignReserves: IStatItem;
+    tradeBalance: IStatItem;
+    industrialOutput: IStatItem;
+    [key: string]: IStatItem;
   };
 }
 
 export interface RangeRow {
   team: string;
+  // Мы обновляем структуру, чтобы она поддерживала min, max и start
   firstColumn?: {
     [key: string]: {
       value: number;
       name: string;
+      min: number;
+      max: number;
+      start: number;
     };
   };
   secondColumn?: {
     [key: string]: {
       value: number;
       name: string;
+      min: number;
+      max: number;
+      start: number;
     };
   };
   thirdColumn?: {
     [key: string]: {
       value: number;
       name: string;
+      min: number;
+      max: number;
+      start: number;
     };
   };
   fourthColumn?: {
     [key: string]: {
       value: number;
       name: string;
+      min: number;
+      max: number;
+      start: number;
     };
   };
 }

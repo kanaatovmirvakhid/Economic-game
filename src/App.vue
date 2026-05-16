@@ -19,82 +19,79 @@ const foreignReserves = ref<HTMLCanvasElement>();
 const tradeBalance = ref<HTMLCanvasElement>();
 let chartInstances: Chart[] = [];
 
-// Полная статистика всех показателей
 const mainStats = computed(() => {
-  // 1. Проверяем, что в массиве есть данные
-  if (gameStore.statistics.length === 0) return [];
+  // 1. Проверяем, что в массиве есть данные (минимум стартовый 1998 год)
+  if (!gameStore.statistics || gameStore.statistics.length === 0) return [];
 
-  // ИСПРАВЛЕНИЕ: Добавляем [0], чтобы получить объект за 1998 год
-  const first = gameStore.statistics[0];
-
-  // Берем последний элемент для текущих данных
+  // ИСПРАВЛЕНИЕ: Добавляем , чтобы получить объект за 1998 год (база для сравнения)
+  const first = gameStore.statistics;
   const last = gameStore.statistics[gameStore.statistics.length - 1];
-
-  // Флаг наличия истории (нужен как минимум один совершенный ход после 1998 года)
   const hasHistory = gameStore.statistics.length > 1;
 
-  // Функция-помощник для округления разницы (чтобы не было 0.300000000004)
+  // Функция-помощник для расчета разницы
   const getChange = (lastVal: number, firstVal: number) => {
     return hasHistory ? Number((lastVal - firstVal).toFixed(2)) : 0;
   };
 
   return [
     {
-      name: 'Темп прироста ВВП (%)',
+      name: 'ВВП (млн. $)',
+      value: last.firstColumn.gdp.value,
+      unit: 'млн $',
+      change: getChange(last.firstColumn.gdp.value, first[0].firstColumn.gdp.value),
+      isPositive: last.firstColumn.gdp.value > first[0].firstColumn.gdp.value
+    },
+    {
+      name: 'Темп роста ВВП (%)',
       value: last.firstColumn.gdpGrowth.value,
       unit: '%',
-      change: getChange(last.firstColumn.gdpGrowth.value, first.firstColumn.gdpGrowth.value),
+      change: getChange(last.firstColumn.gdpGrowth.value, first[0].firstColumn.gdpGrowth.value),
       isPositive: last.firstColumn.gdpGrowth.value > 0
     },
     {
-      name: 'ВВП (млрд. $)',
-      value: last.firstColumn.gdp.value,
-      unit: 'млрд $',
-      change: getChange(last.firstColumn.gdp.value, first.firstColumn.gdp.value),
-      isPositive: last.firstColumn.gdp.value > first.firstColumn.gdp.value
-    },
-    {
-      name: 'Безработица (% рабочей силы)',
+      name: 'Безработица (%)',
       value: last.firstColumn.unemployment.value,
       unit: '%',
-      change: getChange(last.firstColumn.unemployment.value, first.firstColumn.unemployment.value),
-      // Положительно, если безработица падает
-      isPositive: last.firstColumn.unemployment.value < first.firstColumn.unemployment.value
+      change: getChange(last.firstColumn.unemployment.value, first[0].firstColumn.unemployment.value),
+      // Положительно, если безработица падает ниже уровня 1998 года (13.26%)
+      isPositive: last.firstColumn.unemployment.value < first[0].firstColumn.unemployment.value
     },
     {
-      name: 'Потребительская инфляция (%)',
+      name: 'Инфляция (%)',
       value: last.firstColumn.inflation.value,
       unit: '%',
-      change: getChange(last.firstColumn.inflation.value, first.firstColumn.inflation.value),
-      isPositive: last.firstColumn.inflation.value < 10
+      change: getChange(last.firstColumn.inflation.value, first[0].firstColumn.inflation.value),
+      // Положительно, если инфляция ниже стартовой (84.44%)
+      isPositive: last.firstColumn.inflation.value < first[0].firstColumn.inflation.value
     },
     {
-      name: 'Дефицит бюджета',
+      name: 'Дефицит бюджета (%)',
       value: last.secondColumn.budgetDeficit.value,
       unit: '%',
-      change: getChange(last.secondColumn.budgetDeficit.value, first.secondColumn.budgetDeficit.value),
-      isPositive: last.secondColumn.budgetDeficit.value < 5
+      change: getChange(last.secondColumn.budgetDeficit.value, first[1].secondColumn.budgetDeficit.value),
+      // Положительно, если дефицит снижается
+      isPositive: last.secondColumn.budgetDeficit.value < first[1].secondColumn.budgetDeficit.value
     },
     {
       name: 'Золотовалютный резерв',
       value: last.secondColumn.foreignReserves.value,
-      unit: 'млрд $',
-      change: getChange(last.secondColumn.foreignReserves.value, first.secondColumn.foreignReserves.value),
-      isPositive: last.secondColumn.foreignReserves.value > first.secondColumn.foreignReserves.value
+      unit: 'млн $',
+      change: getChange(last.secondColumn.foreignReserves.value, first[1].secondColumn.foreignReserves.value),
+      isPositive: last.secondColumn.foreignReserves.value > first[1].secondColumn.foreignReserves.value
     },
     {
       name: 'Торговый баланс',
       value: last.secondColumn.tradeBalance.value,
-      unit: 'млрд $',
-      change: getChange(last.secondColumn.tradeBalance.value, first.secondColumn.tradeBalance.value),
+      unit: 'млн $',
+      change: getChange(last.secondColumn.tradeBalance.value, first[1].secondColumn.tradeBalance.value),
       isPositive: last.secondColumn.tradeBalance.value > 0
     },
     {
       name: 'Индекс промпроизводства',
       value: last.secondColumn.industrialOutput.value,
       unit: '%',
-      change: getChange(last.secondColumn.industrialOutput.value, first.secondColumn.industrialOutput.value),
-      isPositive: last.secondColumn.industrialOutput.value > 30
+      change: getChange(last.secondColumn.industrialOutput.value, first[1].secondColumn.industrialOutput.value),
+      isPositive: last.secondColumn.industrialOutput.value > first[1].secondColumn.industrialOutput.value
     }
   ];
 });

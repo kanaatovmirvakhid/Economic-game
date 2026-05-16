@@ -8,6 +8,12 @@ const props = defineProps<{
 
 const lastYear = computed(() => props.statistics.length - 1);
 
+const filteredFirstColumn = computed(() => {
+  const source = props.statistics[lastYear.value]?.firstColumn || {};
+  // Превращаем объект в массив [ключ, значение], убираем lnGdp и возвращаем обратно массив
+  return Object.entries(source).filter(([key]) => key !== 'lnGdp');
+});
+
 const getValueAppearance = (statKey: string, currentValue: number, prevValue: number) => {
   if (lastYear.value === 0 || prevValue === undefined) {
     return { color: 'text-default', arrow: null };
@@ -50,52 +56,42 @@ const getValueAppearance = (statKey: string, currentValue: number, prevValue: nu
     <div class="stats-grid">
       <!-- Левая колонка -->
       <div class="stats-column">
-        <div
-          class="stats-item q-pa-sm"
-          v-for="(item, key) in statistics[lastYear].firstColumn"
-          :key="key"
+  <!-- Используем массив [key, item] из отфильтрованного свойства -->
+  <div
+    class="stats-item q-pa-sm"
+    v-for="[key, item] in filteredFirstColumn"
+    :key="key"
+  >
+    <div class="stats-name">{{ item?.name }}</div>
+    <div class="stats-value">
+      <span
+        class="text-weight-bold"
+        :class="[
+          getValueAppearance(
+            key as string,
+            item.value,
+            lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : undefined
+          ).color,
+          getValueAppearance(
+            key as string,
+            item.value,
+            lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : undefined
+          ).strong
+        ]"
+      >
+        {{ item?.value.toFixed(2) }} {{ item?.symbol }}
+
+        <span
+          v-if="lastYear > 0 && getValueAppearance(key as string, item.value, statistics[lastYear - 1].firstColumn[key]?.value).arrow"
+          class="arrow q-ml-xs"
+          :class="getValueAppearance(key as string, item.value, statistics[lastYear - 1].firstColumn[key]?.value).color"
         >
-          <div class="stats-name">{{ item?.name }}</div>
-          <div class="stats-value">
-            <span
-              class="text-weight-bold"
-              :class="[
-                getValueAppearance(
-                  key,
-                  item.value,
-                  lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : undefined
-                ).color,
-                getValueAppearance(
-                  key,
-                  item.value,
-                  lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : undefined
-                ).strong
-              ]"
-            >
-              {{ item?.value.toFixed(2) }} {{ item?.symbol }}
-              <span
-                v-if="lastYear > 0 && getValueAppearance(
-                  key,
-                  item.value,
-                  statistics[lastYear - 1].firstColumn[key]?.value
-                ).arrow"
-                class="arrow q-ml-xs"
-                :class="getValueAppearance(
-                  key,
-                  item.value,
-                  statistics[lastYear - 1].firstColumn[key]?.value
-                ).color"
-              >
-                {{ getValueAppearance(
-                  key,
-                  item.value,
-                  statistics[lastYear - 1].firstColumn[key]?.value
-                ).arrow }}
-              </span>
-            </span>
-          </div>
-        </div>
-      </div>
+          {{ getValueAppearance(key as string, item.value, statistics[lastYear - 1].firstColumn[key]?.value).arrow }}
+        </span>
+      </span>
+    </div>
+  </div>
+</div>
 
       <!-- Правая колонка -->
       <div class="stats-column">
