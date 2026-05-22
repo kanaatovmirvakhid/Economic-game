@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-parsing-error -->
 <script setup lang="ts">
 import { defineProps, computed } from "vue";
 import type { IRow } from "../types/gameTypes";
@@ -67,27 +68,40 @@ const getValueAppearance = (statKey: string, currentValue: number, prevValue: nu
       <span
         class="text-weight-bold"
         :class="[
-          getValueAppearance(
-            key as string,
-            item.value,
-            lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : undefined
-          ).color,
-          getValueAppearance(
-            key as string,
-            item.value,
-            lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : undefined
-          ).strong
-        ]"
+                getValueAppearance(
+                  String(key),
+                  item.value,
+                  lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : 0
+                ).color,
+                getValueAppearance(
+                  String(key),
+                  item.value,
+                  lastYear > 0 ? statistics[lastYear - 1].firstColumn[key]?.value : 0
+                ).strong
+              ]"
       >
         {{ item?.value.toFixed(2) }} {{ item?.symbol }}
 
+
         <span
-          v-if="lastYear > 0 && getValueAppearance(key as string, item.value, statistics[lastYear - 1].firstColumn[key]?.value).arrow"
-          class="arrow q-ml-xs"
-          :class="getValueAppearance(key as string, item.value, statistics[lastYear - 1].firstColumn[key]?.value).color"
-        >
-          {{ getValueAppearance(key as string, item.value, statistics[lastYear - 1].firstColumn[key]?.value).arrow }}
-        </span>
+                v-if="lastYear > 0 && getValueAppearance(
+                  String(key),
+                  item.value,
+                  statistics[lastYear - 1].firstColumn[key]?.value
+                ).arrow"
+                class="arrow q-ml-xs"
+                :class="getValueAppearance(
+                  String(key),
+                  item.value,
+                  statistics[lastYear - 1].firstColumn[key]?.value
+                ).color"
+              >
+                {{ getValueAppearance(
+                  String(key),
+                  item.value,
+                  statistics[lastYear - 1].firstColumn[key]?.value
+                ).arrow }}
+              </span>
       </span>
     </div>
   </div>
@@ -106,33 +120,33 @@ const getValueAppearance = (statKey: string, currentValue: number, prevValue: nu
               class="text-weight-bold"
               :class="[
                 getValueAppearance(
-                  key,
+                  String(key),
                   item.value,
-                  lastYear > 0 ? statistics[lastYear - 1].secondColumn[key]?.value : undefined
+                  lastYear > 0 ? statistics[lastYear - 1].secondColumn[key]?.value : 0
                 ).color,
                 getValueAppearance(
-                  key,
+                  String(key),
                   item.value,
-                  lastYear > 0 ? statistics[lastYear - 1].secondColumn[key]?.value : undefined
+                  lastYear > 0 ? statistics[lastYear - 1].secondColumn[key]?.value : 0
                 ).strong
               ]"
             >
               {{ item?.value.toFixed(2) }} {{ item?.symbol }}
               <span
                 v-if="lastYear > 0 && getValueAppearance(
-                  key,
+                  String(key),
                   item.value,
                   statistics[lastYear - 1].secondColumn[key]?.value
                 ).arrow"
                 class="arrow q-ml-xs"
                 :class="getValueAppearance(
-                  key,
+                  String(key),
                   item.value,
                   statistics[lastYear - 1].secondColumn[key]?.value
                 ).color"
               >
                 {{ getValueAppearance(
-                  key,
+                  String(key),
                   item.value,
                   statistics[lastYear - 1].secondColumn[key]?.value
                 ).arrow }}
