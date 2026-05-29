@@ -142,7 +142,7 @@ function applyPolicyEffects(stats: IRow) {
 
   // 5. Второй блок (масштабировано до млн $)
   stats.secondColumn.budgetDeficit.value += (dKr * -254.62) + (dCpi * 145.23) + (dHc * -250.22) + (dLp * 456.79) + (dSv * 315.42);
-  stats.secondColumn.foreignReserves.value += (dMs * 211) + (dInv * 1540) + (dSal * -607) + (dCpi * 395) + (dPr * -14800) + (dLp * -822);
+  stats.secondColumn.foreignReserves.value += (dMs * 211) + (dInv * 1540) + (dSal * -607) + (dCpi * 395) + (dPr * -1480) + (dLp * -822);
   stats.secondColumn.tradeBalance.value += (dMs * -119.58) + (dCp * -167.49) + (dPr * 120813) + (dHc * -488.25) + (dLp * 599) + (dGs * -738) + (dSv * 653);
   stats.secondColumn.industrialOutput.value += (dKr * -0.0815) + (dSal * 0.257) + (dCpi * 0.0835) + (dPr * -43.93) + (dLp * 0.2715) + (dTx * -0.4198) + (dGs * -1.1467) + (dSv * 0.3637);
 }
