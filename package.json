@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
-    "preview": "vite preview",
+    "preview": "npm run build-only && wrangler dev",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "lint": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "deploy": "npm run build-only && wrangler deploy"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.14",
@@ -19,6 +20,7 @@
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.39.0",
     "@quasar/vite-plugin": "^1.8.1",
     "@tsconfig/node22": "^22.0.0",
     "@types/node": "^22.9.3",
@@ -32,8 +34,9 @@
     "sass-embedded": "^1.82.0",
     "sass-loader": "^16.0.4",
     "typescript": "~5.6.3",
-    "vite": "^6.0.1",
+    "vite": "^6.1.0",
     "vite-plugin-vue-devtools": "^7.6.5",
-    "vue-tsc": "^2.1.10"
+    "vue-tsc": "^2.1.10",
+    "wrangler": "^4.95.0"
   }
 }
